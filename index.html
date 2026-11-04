@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flagged Summary Demo</title>
+<style>
+:root {
+  --bg: #ffffff; --surface: #f7f7f5; --surface-2: #ffffff; --border: #dcdcd6;
+  --text: #1c1c1a; --muted: #6b6a65;
+  --blue: #2a78d6; --orange: #eb6834; --gray: #8d8c86; --gray-light: #b9b8b2;
+  --mark: rgba(235,104,52,.25); --banner: rgba(235,104,52,.10);
+  --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615; --surface: #1f1f1d; --surface-2: #161615; --border: #3a3a37;
+    --text: #f0efec; --muted: #a9a8a1;
+    --blue: #3987e5; --orange: #d95926; --gray: #8d8c86; --gray-light: #5d5c58;
+    --mark: rgba(217,89,38,.35); --banner: rgba(217,89,38,.15);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 26px; margin: 0 0 4px; }
+h2 { font-size: 17px; margin: 0 0 10px; }
+a { color: var(--blue); }
+.meta { color: var(--muted); margin: 0 0 14px; font-size: 15px; }
+.sim { margin: 0 0 16px; font-size: 14px; }
+.banner { border: 1px solid var(--orange); background: var(--banner); border-radius: 8px;
+  padding: 10px 14px; margin-bottom: 16px; }
+.card { border: 1px solid var(--border); background: var(--surface); border-radius: 8px;
+  padding: 12px 14px; }
+.card h3 { margin: 0 0 2px; font-size: 14px; }
+.sub { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.row { display: grid; gap: 16px; }
+.top { grid-template-columns: 3fr 2fr; margin-bottom: 20px; }
+.main { grid-template-columns: 1fr 1fr; align-items: start; }
+@media (max-width: 800px) { .top, .main { grid-template-columns: 1fr; } }
+
+/* visuals */
+.strip { display: flex; gap: 2px; }
+.cell { flex: 1; height: 40px; border-radius: 2px; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; font-weight: 600; color: #fff; }
+.fk { background: var(--blue); } .fd { background: var(--orange); }
+.cd { background: repeating-linear-gradient(45deg, var(--gray), var(--gray) 3px, var(--gray-light) 3px, var(--gray-light) 6px); }
+.ck { background: transparent; border: 1.5px solid var(--gray); color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.stack { display: flex; gap: 2px; height: 40px; }
+.seg { display: flex; align-items: center; justify-content: center; color: #fff;
+  font-size: 13px; font-weight: 600; border-radius: 2px; }
+
+/* summary */
+.sumtext { line-height: 1.65; font-size: 15px; }
+mark { background: var(--mark); color: inherit; padding: 1px 2px; border-radius: 3px; }
+.toggle { margin-top: 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.abstract { margin-top: 10px; font-size: 14px; line-height: 1.6; }
+.abstract[hidden] { display: none; }
+.abs-s { padding: 1px 2px; border-radius: 3px; }
+.abs-s.fd { background: var(--orange); color: #111; }
+.abs-s.cd { background: var(--gray-light); }
+
+/* flags */
+fieldset { border: 0; padding: 0; margin: 0 0 12px; display: grid; gap: 6px; }
+.opt { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border);
+  background: var(--surface); border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
+.opt:has(input:checked) { border-color: var(--orange); }
+input[type=radio], input[type=checkbox] { accent-color: var(--orange); }
+.pair { border-left: 3px solid var(--orange); padding: 4px 10px; margin: 6px 0; font-size: 14px;
+  background: var(--surface-2); }
+.pair.sum { border-left-color: var(--blue); }
+.pair small { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .04em; margin-bottom: 2px; }
+.why { margin-top: 8px; font-size: 14px; line-height: 1.55; }
+.decide { margin-top: 12px; }
+.decide legend { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.decide .choices { display: flex; flex-wrap: wrap; gap: 6px; }
+#progress { font-size: 14px; margin: 8px 0 0; }
+
+button { margin-top: 20px; width: 100%; padding: 12px; border: 0; border-radius: 8px;
+  background: var(--orange); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+button:hover { filter: brightness(1.08); }
+label.note { display: block; margin-top: 16px; font-size: 14px; color: var(--muted); }
+textarea { display: block; width: 100%; min-height: 190px; margin-top: 6px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2);
+  color: var(--text); font: inherit; font-size: 14px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Flagged summary: reviewer view</h1>
+  <p class="meta">Cochrane review <a href="https://doi.org/10.1002/14651858.CD008538.pub2">10.1002/14651858.CD008538.pub2</a> · sargramostim for active Crohn's disease</p>
+  <p class="sim"><strong>This is a simulation.</strong> Flags are hand-set from a pilot answer key to show the layout. No model produced them, and the cut-off is not set yet.</p>
+
+  <div class="banner"><strong>3 flags to review:</strong> 2 dropped findings (both about harms) and 1 dropped context sentence. Start with flag 1.</div>
+
+  <div class="row top">
+    <section class="card" aria-labelledby="strip-h">
+      <h3 id="strip-h">Where the flags are: 3 of 10 abstract sentences</h3>
+      <div class="sub">Each box is one abstract sentence, in order.</div>
+      <div class="strip" id="strip" role="list"></div>
+      <div class="legend">
+        <span><i style="background:var(--blue)"></i>Finding, kept</span>
+        <span><i style="background:var(--orange)"></i>Finding, dropped</span>
+        <span><i style="background:repeating-linear-gradient(45deg,var(--gray),var(--gray) 2px,var(--gray-light) 2px,var(--gray-light) 4px)"></i>Context, dropped</span>
+        <span><i style="border:1.5px solid var(--gray)"></i>Context, kept</span>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="cov-h">
+      <h3 id="cov-h">Findings carried into the summary: 6 of 8</h3>
+      <div class="sub">Only findings count here, not background sentences.</div>
+      <div class="stack">
+        <div class="seg fk" style="flex:6">6 kept</div>
+        <div class="seg fd" style="flex:2">2 dropped</div>
+      </div>
+      <div class="legend"><span>Partly kept: 0 (would count as dropped)</span></div>
+    </section>
+  </div>
+
+  <div class="row main">
+    <section>
+      <h2>Plain-language summary (written by the author team)</h2>
+      <div class="card sumtext" id="summary"></div>
+      <label class="toggle"><input type="checkbox" id="showFull"> Show the full abstract</label>
+      <div class="card abstract" id="abstract" hidden></div>
+    </section>
+
+    <section>
+      <h2>Flags to review, in reading order</h2>
+      <fieldset id="flagList"><legend class="sr" style="position:absolute;left:-9999px">Flags</legend></fieldset>
+      <div class="card" id="detail"></div>
+      <fieldset class="decide">
+        <legend>Your decision on this flag</legend>
+        <div class="choices" id="decisions"></div>
+      </fieldset>
+      <p id="progress">Decisions made: 0 of 3</p>
+    </section>
+  </div>
+
+  <button id="export" type="button">Draft note to author team</button>
+  <label class="note" for="note">Draft note (edit before sending)</label>
+  <textarea id="note"></textarea>
+</main>
+
+<script>
+const DOI = "10.1002/14651858.CD008538.pub2";
+
+const SUMMARY = [
+  "This review of three studies did not show any difference in effectiveness between sargramostim and placebo (fake drug) for induction of remission or clinical improvement in patients with active Crohn's disease.",
+  "Side effects associated with sargramostim treatment included bone pain, musculoskeletal chest pain, and dyspnea (shortness of breath).",
+  "Due to the fact that there were only a small number of trials in this area and some of them give opposite results, the authors concluded that while sargramostim does not appear to be more effective than placebo more research is needed to determine if this drug provides a benefit for the treatment of active Crohn's disease."
+];
+
+// state: fk = finding kept, fd = finding dropped, cd = context dropped, ck = context kept
+const ABSTRACT = [
+  ["Three studies were identified, 2 published as full papers and one in abstract form (537 patients).", "ck"],
+  ["The risk of bias was low for the 3 included studies.", "cd"],
+  ["There was no statistically significant difference in the proportion of patients (GM-CSF 25.3% versus placebo 17.5%) who achieved clinical remission (RR 1.67; 95% CI 0.80 to 3.50; P = 0.17; 3 studies; 537 patients).", "fk"],
+  ["There was no statistically significant difference in the proportion of patients (GM-CSF 38.3% versus placebo 24.8%) who achieved a 100-point clinical response (RR 1.71 95% CI 0.98 to 2.97; P = 0.06; 3 studies; 537 patients).", "fk"],
+  ["There was no statistically significant difference in the proportion of patients (GM-CSF 54.3% versus placebo 44.2%) who achieved a 70 point clinical response (RR 1.23; 95% CI 0.83 to 1.82; P = 0.30; 1 study; 124 patients).", "fk"],
+  ["There was no statistically significant difference in the proportion of patients (GM-CSF 95.8% versus placebo 89.3%) who experienced at least one adverse event (RR 1.07; 95% CI 0.99 to 1.16; P = 0.08; 2 studies; 251 patients), or serious adverse events (GM-CSF 12.0% versus placebo 4.8%; RR 2.21; 95% CI 0.84 to 5.81; P = 0.11; 2 studies; 251 patients).", "fd"],
+  ["The incidence of bone pain, musculoskeletal chest pain, and dyspnea were higher in patients treated with sargramostim compared to placebo.", "fk"],
+  ["Other adverse events commonly associated with sargramostim such as pulmonary capillary leak syndrome, pulmonary edema, heart failure, fever, and neurotoxicity were not reported in these studies.", "fd"],
+  ["Sargramostim does not appear to be more effective than placebo for induction of clinical remission or clinical improvement in patients with active Crohn's disease.", "fk"],
+  ["However, the GRADE analysis indicates that the overall quality of the evidence for the primary (clinical remission) and secondary outcomes (clinical response) was low indicating that further research is likely to have an impact on the effect estimates.", "fk"]
+];
+
+const FLAGS = [
+  { n: 1, idx: 5, kind: "Dropped finding", severity: "major", match: 1, short: "Serious adverse events",
+    why: "<b>Why it matters:</b> serious adverse events were 12.0% vs 4.8%. The difference was not statistically significant but is still clinically important, and a patient would not learn it from this summary.",
+    ask: "The abstract reports serious adverse events (12.0% with sargramostim vs 4.8% with placebo; not statistically significant). The summary does not mention serious adverse events. Please consider stating this." },
+  { n: 2, idx: 7, kind: "Dropped finding", severity: "major", match: 1, short: "Known serious harms not reported",
+    why: "<b>Why it matters:</b> a patient could take \"no other side effects listed\" to mean \"no other side effects exist.\"",
+    ask: "The abstract says other known serious harms (pulmonary capillary leak syndrome, pulmonary edema, heart failure) were not reported in these studies. The summary does not say so, so its list of side effects reads as complete. Please consider adding a sentence." },
+  { n: 3, idx: 1, kind: "Dropped context", severity: "lower priority", match: null, short: "Risk of bias was low",
+    why: "<b>Why it matters less:</b> background, not a result. It is flagged because the checker looks at every abstract sentence. Read it last. Cochrane's guidance leaves many sentences out by design.",
+    ask: null }
+];
+
+const DECISIONS = ["Send to author team", "Dismiss", "Unsure"];
+const decisions = {};
+let current = 1;
+
+const $ = (id) => document.getElementById(id);
+
+function renderStrip() {
+  $("strip").innerHTML = ABSTRACT.map(([, s], i) =>
+    `<div class="cell ${s}" role="listitem" title="Sentence ${i + 1}">${i + 1}</div>`).join("");
+}
+
+function renderSummary() {
+  const m = FLAGS.find(f => f.n === current).match;
+  $("summary").innerHTML = SUMMARY.map((s, i) => i === m ? `<mark>${s}</mark>` : s).join(" ");
+}
+
+function renderFlagList() {
+  $("flagList").insertAdjacentHTML("beforeend", FLAGS.map(f =>
+    `<label class="opt"><input type="radio" name="flag" value="${f.n}" ${f.n === current ? "checked" : ""}>
+     ${f.n} · ${f.kind}: ${f.short}</label>`).join(""));
+  $("flagList").addEventListener("change", e => {
+    if (e.target.name !== "flag") return;
+    current = Number(e.target.value);
+    renderSummary(); renderDetail(); syncDecision();
+  });
+}
+
+function renderDetail() {
+  const f = FLAGS.find(x => x.n === current);
+  const closest = f.match === null ? "<em>No close match in the summary.</em>" : SUMMARY[f.match];
+  $("detail").innerHTML =
+    `<div style="font-weight:600;margin-bottom:6px">Flag ${f.n} of 3 · ${f.kind} (${f.severity}) · ${f.short}</div>
+     <div class="pair"><small>Abstract says</small>${ABSTRACT[f.idx][0]}</div>
+     <div class="pair sum"><small>Closest summary sentence (highlighted on the left)</small>${closest}</div>
+     <div class="why">${f.why}</div>`;
+}
+
+function renderDecisions() {
+  $("decisions").innerHTML = DECISIONS.map(d =>
+    `<label class="opt"><input type="radio" name="decision" value="${d}"> ${d}</label>`).join("");
+  $("decisions").addEventListener("change", e => {
+    decisions[current] = e.target.value;
+    $("progress").textContent = `Decisions made: ${Object.keys(decisions).length} of ${FLAGS.length}`;
+  });
+}
+
+function syncDecision() {
+  document.querySelectorAll('input[name="decision"]').forEach(r => { r.checked = decisions[current] === r.value; });
+}
+
+function renderAbstract() {
+  $("abstract").innerHTML = ABSTRACT.map(([s, k]) =>
+    `<span class="abs-s ${k === "fd" || k === "cd" ? k : ""}">${s}</span>`).join(" ");
+  $("showFull").addEventListener("change", e => { $("abstract").hidden = !e.target.checked; });
+}
+
+$("export").addEventListener("click", () => {
+  const sent = FLAGS.filter(f => decisions[f.n] === "Send to author team" && f.ask);
+  if (!sent.length) { $("note").value = 'No flags marked "Send to author team" yet.'; return; }
+  const items = sent.map((f, i) => `${i + 1}. ${f.ask}`).join("\n");
+  $("note").value =
+    `Hello author team,\n\nThank you for the draft of the plain-language summary for Cochrane review ${DOI}. ` +
+    `While comparing it with the abstract, I found content that may have been dropped:\n\n${items}\n\n` +
+    `Could you review these before publication?\n\nThank you.`;
+});
+
+renderStrip(); renderSummary(); renderFlagList(); renderDetail(); renderDecisions(); renderAbstract();
+</script>
+</body>
+</html>
