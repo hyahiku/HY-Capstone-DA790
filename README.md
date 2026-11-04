@@ -10,3 +10,5 @@ pinned: false
 ---
 
 Simulation of a Cochrane peer reviewer's view when the checker flags a plain-language summary. Flags are hand-set from a pilot answer key, not model output.
+
+[![CLICK HERE FOR DEMO](https://img.shields.io/badge/CLICK%20HERE%20FOR-DEMO-eb6834?style=for-the-badge)](https://hyahiku.github.io/HY-Capstone-DA790/)
